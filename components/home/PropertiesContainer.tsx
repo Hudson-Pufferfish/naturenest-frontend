@@ -1,19 +1,30 @@
-// import { fetchProperties } from '@/utils/actions';
+"use client";
+
 import PropertiesList from "./PropertiesList";
 import EmptyList from "./EmptyList";
-import type { PropertyCardProps } from "@/utils/types";
+import { useFetchAllProperties } from "@/hooks/useProperties";
 
-async function PropertiesContainer({ category, search }: { category?: string; search?: string }) {
-  // const properties: PropertyCardProps[] = await fetchProperties({
-  //   category,
-  //   search,
-  // });
-  const properties: PropertyCardProps[] = [];
+function PropertiesContainer({ category, search }: { category?: string; search?: string }) {
+  const { data: properties } = useFetchAllProperties();
+  console.log("🚀 -------------------------------------🚀");
+  console.log("🚀 ~ PropertiesContainer ~ data:", properties);
+  console.log("🚀 -------------------------------------🚀");
 
-  if (properties.length === 0) {
+  if (!properties || properties.length === 0) {
     return <EmptyList heading="No results." message="Try changing or removing some of your filters." btnText="Clear Filters" />;
   }
 
-  return <PropertiesList properties={properties} />;
+  // Transform the properties to match PropertyCardProps
+  const propertyCards = properties.map((property) => ({
+    id: property.id,
+    image: property.coverUrl || "",
+    tagline: property.name,
+    country: property.country || "",
+    price: property.price || 0,
+    name: property.name || "",
+  }));
+
+  return <PropertiesList properties={propertyCards} />;
 }
+
 export default PropertiesContainer;
