@@ -1,5 +1,16 @@
 {
   "extends": ["next/core-web-vitals", "next/typescript"],
+  "plugins": ["@tanstack/query"],
+  "rules": {
+    "@tanstack/query/exhaustive-deps": "error",
+    "@tanstack/query/prefer-query-object-syntax": "error",
+    "@typescript-eslint/no-empty-object-type": [
+      "error",
+      {
+        "allowSingleExtends": true
+      }
+    ]
+  },
   "overrides": [
     {
       "files": ["./tailwind.config.ts"],
@@ -7,13 +18,5 @@
         "@typescript-eslint/no-var-requires": "off"
       }
     }
-  ],
-  "rules": {
-    "@typescript-eslint/no-empty-object-type": [
-      "error",
-      {
-        "allowSingleExtends": true
-      }
-    ]
-  }
+  ]
 }
