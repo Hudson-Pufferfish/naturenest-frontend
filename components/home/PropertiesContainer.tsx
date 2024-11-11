@@ -6,9 +6,6 @@ import { useFetchAllProperties } from "@/hooks/useProperties";
 
 function PropertiesContainer({ category, search }: { category?: string; search?: string }) {
   const { data: properties } = useFetchAllProperties();
-  console.log("🚀 -------------------------------------🚀");
-  console.log("🚀 ~ PropertiesContainer ~ data:", properties);
-  console.log("🚀 -------------------------------------🚀");
 
   if (!properties || properties.length === 0) {
     return <EmptyList heading="No results." message="Try changing or removing some of your filters." btnText="Clear Filters" />;
