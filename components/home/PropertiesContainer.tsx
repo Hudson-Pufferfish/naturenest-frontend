@@ -14,11 +14,11 @@ function PropertiesContainer({ category, search }: { category?: string; search?:
   // Transform the properties to match PropertyCardProps
   const propertyCards = properties.map((property) => ({
     id: property.id,
-    image: property.coverUrl || "",
-    tagline: property.name,
-    country: property.country || "",
-    price: property.price || 0,
-    name: property.name || "",
+    coverUrl: property.coverUrl,
+    tagLine: property.tagLine,
+    country: property.country,
+    price: property.price,
+    name: property.name,
   }));
 
   return <PropertiesList properties={propertyCards} />;

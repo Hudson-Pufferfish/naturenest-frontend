@@ -3,19 +3,19 @@ import Link from "next/link";
 // import CountryFlagAndName from './CountryFlagAndName';
 // import PropertyRating from './PropertyRating';
 // import FavoriteToggleButton from './FavoriteToggleButton';
-import { PropertyCardProps } from "@/utils/types";
+import { PropertyCardProps } from "@/types/property";
 import { formatCurrency } from "@/utils/format";
 
 function PropertyCard({ property }: { property: PropertyCardProps }) {
-  const { name, image, price } = property;
-  const { country, id: propertyId, tagline } = property;
+  const { name, coverUrl: image, price } = property;
+  const { country, id: propertyId, tagLine } = property;
   return (
     <article className="group relative">
       <Link href={`/properties/${propertyId}`}>
         <div className="relative h-[300px] mb-2 overflow-hidden rounded-md">
           {/* TODO (@hudsonn) fix image loader */}
           <Image
-            src={image.includes("unsplash.com/photos/") ? `https://images.unsplash.com/photo-${image.split("-").pop()}` : image}
+            src={image ? (image.includes("unsplash.com/photos/") ? `https://images.unsplash.com/photo-${image.split("-").pop()}` : image) : ""}
             fill
             sizes="(max-width:768px) 100vw, 50vw"
             alt={name}
@@ -23,17 +23,18 @@ function PropertyCard({ property }: { property: PropertyCardProps }) {
           />
         </div>
         <div className="flex justify-between items-center">
-          <h3 className="text-sm font-semibold mt-1">{name.substring(0, 30)}</h3>
+          <h3 className="text-sm font-semibold mt-1">{name ? name.substring(0, 30) : "N/A Property Name"}</h3>
           {/* TODO (@hudsonn) property rating */}
           {/* <PropertyRating inPage={false} propertyId={propertyId} /> */}
         </div>
-        <p className="text-sm mt-1 text-muted-foreground">{tagline.substring(0, 40)}</p>
+        <p className="text-sm mt-1 text-muted-foreground">{tagLine ? tagLine.substring(0, 40) : "N/A Property Description"}</p>
         <div className="flex justify-between items-center mt-1">
           <p className="text-sm mt-1">
-            <span className="font-semibold">{formatCurrency(price)} </span>
+            <span className="font-semibold">{price ? formatCurrency(price) : formatCurrency(0)}</span>
             night
           </p>
           {/* TODO (@hudsonn) country and flag */}
+          {/* TODO (@hudsonn) handle undefined country */}
           {/* <CountryFlagAndName countryCode={country} /> */}
         </div>
       </Link>
