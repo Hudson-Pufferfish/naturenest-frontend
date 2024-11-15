@@ -23,3 +23,5 @@ export interface Property {
   reservations: Reservation[]; // Related reservations
   country?: Country; // Related country object
 }
+
+export type PropertyCardProps = Pick<Property, "id" | "coverUrl" | "name" | "price" | "country" | "tagLine">;
