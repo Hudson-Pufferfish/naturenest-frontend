@@ -11,6 +11,8 @@ function PropertiesContainer({ category, search }: { category?: string; search?:
     take: 20,
   });
 
+  // TODO(@hudsonn): Add infinite scroll
+
   if (!properties || properties.length === 0) {
     return <EmptyList heading="No results." message="Try changing or removing some of your filters." btnText="Clear Filters" />;
   }
