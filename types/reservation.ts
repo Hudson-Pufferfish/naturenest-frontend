@@ -12,4 +12,5 @@ export interface Reservation {
   endDate: string; // End date of the reservation
   createdAt: Date; // Creation timestamp
   updatedAt: Date; // Last updated timestamp
+  numberOfGuests: number; // Number of guests
 }
