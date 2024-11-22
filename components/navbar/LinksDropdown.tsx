@@ -6,25 +6,43 @@ import Link from "next/link";
 import { Button } from "../ui/button";
 import UserIcon from "./UserIcon";
 import { links } from "@/utils/links";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { getAuthToken } from "@/utils/auth";
 
 function LinksDropdown() {
   const router = useRouter();
+  const pathname = usePathname();
   const { toast } = useToast();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  // Check authentication status whenever component mounts or route changes
   useEffect(() => {
-    // Parse cookies into an object
-    const cookies = document.cookie.split(";").reduce((acc, cookie) => {
-      const [key, value] = cookie.trim().split("=");
-      acc[key] = value;
-      return acc;
-    }, {} as { [key: string]: string });
+    const checkAuth = () => {
+      const token = getAuthToken();
+      setIsAuthenticated(!!token);
+    };
 
-    setIsAuthenticated(!!cookies["jwt"]);
-  }, []);
+    // Check immediately
+    checkAuth();
+
+    // Add event listener for storage changes (in case token is modified in another tab)
+    window.addEventListener("storage", checkAuth);
+
+    // Add a MutationObserver to watch for cookie changes
+    const observer = new MutationObserver(checkAuth);
+    observer.observe(document, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+    });
+
+    return () => {
+      window.removeEventListener("storage", checkAuth);
+      observer.disconnect();
+    };
+  }, [pathname]); // Re-run when pathname changes
 
   const handleLogout = () => {
     document.cookie = "jwt=; max-age=0; path=/;";
