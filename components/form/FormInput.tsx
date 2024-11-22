@@ -1,5 +1,6 @@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { ChangeEvent } from "react";
 
 type FormInputProps = {
   name: string;
@@ -7,16 +8,17 @@ type FormInputProps = {
   label?: string;
   defaultValue?: string;
   placeholder?: string;
+  value?: string;
+  onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
 };
 
-function FormInput(props: FormInputProps) {
-  const { label, name, type, defaultValue, placeholder } = props;
+function FormInput({ label, name, type, defaultValue, placeholder, value, onChange }: FormInputProps) {
   return (
     <div className="mb-2">
       <Label htmlFor={name} className="capitalize">
         {label || name}
       </Label>
-      <Input id={name} name={name} type={type} defaultValue={defaultValue} placeholder={placeholder} required />
+      <Input id={name} name={name} type={type} defaultValue={defaultValue} placeholder={placeholder} value={value} onChange={onChange} required />
     </div>
   );
 }

@@ -1,8 +1,11 @@
+This is the auth and user API endpoints from separate NestJS Repo using JWT for authentication.
+
 1. Sign In
    Endpoint: POST /auth/sign-in
    Request Body:
 
 ```
+
 {
   email: string;     // Must be valid email
   password: string; // Minimum 6 characters
@@ -13,21 +16,56 @@ Response:
 
 ```
 {
-  jwt: string;
-  user: {
-    id: string;
-    email: string;
-    username: string;
-    firstName: string;
-    lastName: string;
+  status: number;    // HTTP status code
+  message: string;   // Success message
+  data: {
+    jwt: string;
+    user: {
+      id: string;
+      email: string;
+      username: string;
+      firstName: string;
+      lastName: string;
+    }
   }
 }
 ```
 
-Error responses:
+Error Responses:
 
-- 401 Unauthorized: "Invalid credentials"
-- 404 Not Found: "User not found"
+All error responses for both Sign In and Register follow this format:
+
+```json
+{
+  "statusCode": number,
+  "message": string,
+  "error": string
+}
+```
+
+Possible errors:
+
+- 400 Bad Request
+  - "Passwords do not match"
+  - "Email already exists"
+  - "Username already exists"
+  - "Password must be at least 6 characters"
+  - "Username must be at least 3 characters"
+  - "Invalid email format"
+- 401 Unauthorized
+  - "Invalid credentials"
+- 404 Not Found
+  - "User not found"
+
+Example error response:
+
+```json
+{
+  "statusCode": 400,
+  "message": "Email already exists",
+  "error": "Bad Request"
+}
+```
 
 2. Register
    Endpoint: POST /auth/register
@@ -48,24 +86,20 @@ Response:
 
 ```
 {
-  jwt: string;
-  user: {
-    id: string;
-    email: string;
-    username: string;
-    firstName: string;
-    lastName: string;
+  status: number;    // HTTP status code
+  message: string;   // Success message
+  data: {
+    jwt: string;     // JWT authentication token
+    user: {
+      id: string;
+      email: string;
+      username: string;
+      firstName: string;
+      lastName: string;
+    }
   }
 }
 ```
-
-Error responses:
-
-- 400 Bad Request: "Passwords do not match"
-- 400 Bad Request: "Email already exists"
-- 400 Bad Request: "Username already exists"
-
-We will handle "Password must be at least 6 characters" and username minimum 3 characters in the frontend.
 
 3. Logout
    Currently, there is no server-side logout endpoint implemented. Logout should be handled on the frontend by:

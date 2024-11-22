@@ -8,12 +8,15 @@ import UserIcon from "./UserIcon";
 import { links } from "@/utils/links";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { useToast } from "@/components/ui/use-toast";
 
 function LinksDropdown() {
   const router = useRouter();
+  const { toast } = useToast();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
+    // Parse cookies into an object
     const cookies = document.cookie.split(";").reduce((acc, cookie) => {
       const [key, value] = cookie.trim().split("=");
       acc[key] = value;
@@ -26,6 +29,9 @@ function LinksDropdown() {
   const handleLogout = () => {
     document.cookie = "jwt=; max-age=0; path=/;";
     setIsAuthenticated(false);
+    toast({
+      description: "Successfully logged out!",
+    });
     router.push("/");
   };
 
