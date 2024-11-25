@@ -2,7 +2,7 @@
 
 import PropertiesList from "./PropertiesList";
 import EmptyList from "./EmptyList";
-import { useProperties } from "@/utils/properties";
+import { useAllProperties } from "@/utils/properties";
 import LoadingCards from "../card/LoadingCards";
 import { useDebouncedCallback } from "use-debounce";
 import { useState, useEffect } from "react";
@@ -18,7 +18,7 @@ function PropertiesContainer({ category, search }: { category?: string; search?:
     debouncedSetSearch(search);
   }, [search]);
 
-  const { data: properties, isLoading } = useProperties({
+  const { data: properties, isLoading } = useAllProperties({
     categoryName: category,
     propertyName: debouncedSearch,
     take: 20,

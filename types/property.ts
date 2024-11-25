@@ -20,8 +20,11 @@ export interface Property {
   creator: User; // Related user object representing the creator
   createdAt: Date; // Creation timestamp
   updatedAt: Date; // Last updated timestamp
-  reservations: Reservation[]; // Related reservations
   country?: Country; // Related country object
+}
+
+export interface PropertyWithDetails extends Property {
+  reservations: Reservation[]; // Related reservations
   totalNightsBooked: number; // Total nights booked
   totalIncome: number; // Total income
 }
