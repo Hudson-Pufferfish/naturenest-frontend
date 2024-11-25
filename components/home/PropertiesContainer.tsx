@@ -4,11 +4,23 @@ import PropertiesList from "./PropertiesList";
 import EmptyList from "./EmptyList";
 import { useProperties } from "@/utils/properties";
 import LoadingCards from "../card/LoadingCards";
+import { useDebouncedCallback } from "use-debounce";
+import { useState, useEffect } from "react";
 
 function PropertiesContainer({ category, search }: { category?: string; search?: string }) {
+  const [debouncedSearch, setDebouncedSearch] = useState<string | undefined>(search);
+
+  const debouncedSetSearch = useDebouncedCallback((newSearch: string | undefined) => {
+    setDebouncedSearch(newSearch?.trim() || undefined);
+  }, 150);
+
+  useEffect(() => {
+    debouncedSetSearch(search);
+  }, [search]);
+
   const { data: properties, isLoading } = useProperties({
     categoryName: category,
-    propertyName: search,
+    propertyName: debouncedSearch,
     take: 20,
   });
 
