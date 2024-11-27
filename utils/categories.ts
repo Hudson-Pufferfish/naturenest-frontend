@@ -30,6 +30,7 @@ export type CategoryLabel =
   | "warehouse"
   | "lodge";
 
+// TODDO(@hudsonn)
 export const categories: Category[] = [
   {
     label: "farmhouse",

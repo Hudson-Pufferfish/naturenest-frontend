@@ -79,6 +79,9 @@ function DeleteRental({ propertyId }: { propertyId: string }) {
   const deleteRental = async () => {
     return { message: "Delete operation placeholder" };
   };
+
+  //  const deleteRental = deleteRentalAction.bind(null, { propertyId });
+
   return (
     <FormContainer action={deleteRental}>
       <IconButton actionType="delete" />
