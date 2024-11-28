@@ -18,18 +18,41 @@ interface ApiError {
 
 // Fetch properties with filters
 const fetchProperties = async (params: FetchPropertiesParams = {}): Promise<Property[]> => {
-  const queryParams = new URLSearchParams();
+  try {
+    const queryParams = new URLSearchParams();
 
-  if (params.categoryName) queryParams.append("categoryName", params.categoryName);
-  if (params.propertyName) queryParams.append("propertyName", params.propertyName);
-  if (params.skip !== undefined) queryParams.append("skip", params.skip.toString());
-  if (params.take !== undefined) queryParams.append("take", params.take.toString());
+    if (params.categoryName) queryParams.append("categoryName", params.categoryName);
+    if (params.propertyName) queryParams.append("propertyName", params.propertyName);
+    if (params.skip !== undefined) queryParams.append("skip", params.skip.toString());
+    if (params.take !== undefined) queryParams.append("take", params.take.toString());
 
-  const queryString = queryParams.toString();
-  const url = `/properties${queryString ? `?${queryString}` : ""}`;
+    const queryString = queryParams.toString();
+    const url = `/properties${queryString ? `?${queryString}` : ""}`;
 
-  const response = await axiosInstance.get(url);
-  return response.data.data;
+    const response = await axiosInstance.get(url);
+    return response.data.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.data) {
+      const apiError = error.response.data as ApiError;
+
+      if (Array.isArray(apiError.message)) {
+        const errorMessages = apiError.message
+          .map((item) => {
+            if (item.constraints) {
+              return Object.values(item.constraints);
+            }
+            return [];
+          })
+          .flat()
+          .join(". ");
+        throw new Error(errorMessages || "Validation failed");
+      } else {
+        throw new Error(typeof apiError.message === "string" ? apiError.message : apiError.error || "An error occurred");
+      }
+    }
+
+    throw new Error("Failed to fetch properties. Please check your connection.");
+  }
 };
 
 // Fetch user's properties with details
@@ -76,6 +99,13 @@ export const useAllProperties = (params: FetchPropertiesParams = {}) => {
   return useQuery({
     queryKey: ["properties", params],
     queryFn: () => fetchProperties(params),
+    retry: (failureCount, error) => {
+      if (error instanceof Error && error.message.includes("Validation failed")) {
+        return false;
+      }
+      return failureCount < 2;
+    },
+    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
   });
 };
 
