@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-// import CountryFlagAndName from './CountryFlagAndName';
+import CountryFlagAndName from "./CountryFlagAndName";
 // import PropertyRating from './PropertyRating';
 // import FavoriteToggleButton from './FavoriteToggleButton';
 import { PropertyCardProps } from "@/types/property";
@@ -8,7 +8,7 @@ import { formatCurrency } from "@/utils/format";
 
 function PropertyCard({ property }: { property: PropertyCardProps }) {
   const { name, coverUrl: image, price } = property;
-  const { country, id: propertyId, tagLine } = property;
+  const { countryCode, id: propertyId, tagLine } = property;
   return (
     <article className="group relative">
       <Link href={`/properties/${propertyId}`}>
@@ -33,9 +33,7 @@ function PropertyCard({ property }: { property: PropertyCardProps }) {
             <span className="font-semibold">{price ? formatCurrency(price) : formatCurrency(0)}</span>
             night
           </p>
-          {/* TODO (@hudsonn) country and flag */}
-          {/* TODO (@hudsonn) handle undefined country */}
-          {/* <CountryFlagAndName countryCode={country} /> */}
+          {countryCode ? <CountryFlagAndName countryCode={countryCode} /> : null}
         </div>
       </Link>
       <div className="absolute top-5 right-5 z-5">

@@ -1,5 +1,4 @@
 import { Category } from "./category";
-import { Country } from "./country";
 import { Reservation } from "./reservation";
 import { User } from "./user";
 
@@ -20,7 +19,7 @@ export interface Property {
   creator: User; // Related user object representing the creator
   createdAt: Date; // Creation timestamp
   updatedAt: Date; // Last updated timestamp
-  country?: Country; // Related country object
+  countryCode: string; // Related country object
 }
 
 export interface PropertyWithDetails extends Property {
@@ -29,4 +28,4 @@ export interface PropertyWithDetails extends Property {
   totalIncome: number; // Total income
 }
 
-export type PropertyCardProps = Pick<Property, "id" | "coverUrl" | "name" | "price" | "country" | "tagLine">;
+export type PropertyCardProps = Pick<Property, "id" | "coverUrl" | "name" | "price" | "countryCode" | "tagLine">;
