@@ -2,12 +2,12 @@ import axiosInstance from "./axiosInstance";
 import { SignInCredentials, RegisterCredentials, AuthResponse } from "@/types/auth";
 
 export const signIn = async (credentials: SignInCredentials): Promise<AuthResponse> => {
-  const response = await axiosInstance.post<AuthResponse>("/auth/sign-in", credentials);
+  const response = await axiosInstance.post<AuthResponse>("/v1/auth/sign-in", credentials);
   return response.data;
 };
 
 export const register = async (credentials: RegisterCredentials): Promise<AuthResponse> => {
-  const response = await axiosInstance.post<AuthResponse>("/auth/register", credentials);
+  const response = await axiosInstance.post<AuthResponse>("/v1/auth/register", credentials);
   return response.data;
 };
 

@@ -27,7 +27,7 @@ const fetchProperties = async (params: FetchPropertiesParams = {}): Promise<Prop
     if (params.take !== undefined) queryParams.append("take", params.take.toString());
 
     const queryString = queryParams.toString();
-    const url = `/properties${queryString ? `?${queryString}` : ""}`;
+    const url = `/v1/properties${queryString ? `?${queryString}` : ""}`;
 
     const response = await axiosInstance.get(url);
     return response.data.data;
@@ -63,7 +63,7 @@ const fetchMyProperties = async (params: { skip?: number; take?: number } = {}):
     if (params.take !== undefined) queryParams.append("take", params.take.toString());
 
     const queryString = queryParams.toString();
-    const url = `/properties/my${queryString ? `?${queryString}` : ""}`;
+    const url = `/v1/properties/my${queryString ? `?${queryString}` : ""}`;
 
     const response = await axiosInstance.get(url);
     return response.data.data;
