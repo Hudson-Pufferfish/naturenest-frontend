@@ -10,6 +10,8 @@ import { useProperty } from "@/utils/properties";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LuDollarSign } from "react-icons/lu";
 import { formatCurrency } from "@/utils/format";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 // TODO: Implement these components later
 // import FavoriteToggleButton from "@/components/card/FavoriteToggleButton";
@@ -76,11 +78,14 @@ function PropertyDetailsPage({ params }: { params: { id: string } }) {
           <Amenities amenities={JSON.stringify(property.amenities || [])} />
         </div>
         <div className="lg:col-span-4">
-          <div className="bg-muted p-4 rounded-lg">
+          <div className="bg-muted p-4 rounded-lg space-y-4">
             <div className="flex items-center gap-x-1">
               <span className="text-xl font-semibold">{formatCurrency(property.price)}</span>
               <span className="text-sm text-muted-foreground">/night</span>
             </div>
+            <Link href={`/properties/${property.id}/book`}>
+              <Button className="w-full">Book Now</Button>
+            </Link>
           </div>
         </div>
       </section>
