@@ -7,7 +7,7 @@ export interface Property {
   name: string; // Property name
   tagLine: string; // Tagline for the property
   categoryId: string; // ID of the category
-  category: Category; // Related category object
+  // category: Category; // Related category object
   description: string; // Description of the property
   coverUrl: string; // URL for the cover image
   price: number; // Price of the property
@@ -19,7 +19,7 @@ export interface Property {
   creator: User; // Related user object representing the creator
   createdAt: Date; // Creation timestamp
   updatedAt: Date; // Last updated timestamp
-  countryCode: string; // Related country object
+  countryCode: string; // Related country object cca2 format
 }
 
 export interface PropertyWithDetails extends Property {
