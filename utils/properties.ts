@@ -1,6 +1,6 @@
 import { Property, PropertyWithDetails } from "@/types/property";
 import axiosInstance from "@/utils/axiosInstance";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 
 interface FetchPropertiesParams {
@@ -14,6 +14,21 @@ interface ApiError {
   statusCode: number;
   message: string | { constraints: Record<string, string> }[];
   error: string;
+}
+
+interface CreatePropertyRequest {
+  name: string;
+  tagLine: string;
+  description: string;
+  price: number;
+  categoryId: string;
+  coverUrl: string;
+  guests: number;
+  bedrooms: number;
+  beds: number;
+  baths: number;
+  countryCode: string;
+  amenityIds?: string[];
 }
 
 // Fetch properties with filters
@@ -122,5 +137,21 @@ export const useMyProperties = (params: { skip?: number; take?: number } = {}) =
       return failureCount < 2; // retry twice at most
     },
     staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
+  });
+};
+
+// Add create property mutation hook
+export const useCreateProperty = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: CreatePropertyRequest) => {
+      const response = await axiosInstance.post("/v1/properties", data);
+      return response.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["properties"] });
+      queryClient.invalidateQueries({ queryKey: ["myProperties"] });
+    },
   });
 };

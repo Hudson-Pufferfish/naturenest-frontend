@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: "https://naturenest-main-service.up.railway.app/api" ?? "http://localhost:4400/api",
+  baseURL: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4400/api",
 });
 
 // Add a request interceptor to include JWT token
