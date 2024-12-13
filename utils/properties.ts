@@ -31,6 +31,13 @@ interface CreatePropertyRequest {
   amenityIds?: string[];
 }
 
+// Add these types to types/property.ts
+export interface Amenity {
+  id: string;
+  name: string;
+  description?: string;
+}
+
 // Fetch properties with filters
 const fetchProperties = async (params: FetchPropertiesParams = {}): Promise<Property[]> => {
   try {
@@ -169,5 +176,55 @@ export const useDeleteProperty = () => {
       queryClient.invalidateQueries({ queryKey: ["properties"] });
       queryClient.invalidateQueries({ queryKey: ["myProperties"] });
     },
+  });
+};
+
+// Add this function to fetch a single property with details
+const fetchPropertyById = async (propertyId: string): Promise<Property> => {
+  try {
+    const response = await axiosInstance.get(`/v1/properties/${propertyId}`);
+    return response.data.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.data) {
+      const apiError = error.response.data as ApiError;
+      throw new Error(typeof apiError.message === "string" ? apiError.message : apiError.error || "An error occurred");
+    }
+    throw new Error("Failed to fetch property details");
+  }
+};
+
+// Add this hook
+export const useProperty = (propertyId: string) => {
+  return useQuery({
+    queryKey: ["property", propertyId],
+    queryFn: () => fetchPropertyById(propertyId),
+    retry: (failureCount, error) => {
+      if (error instanceof Error && error.message.includes("not found")) {
+        return false;
+      }
+      return failureCount < 2;
+    },
+  });
+};
+
+// Add this function to utils/properties.ts
+const fetchAllAmenities = async (): Promise<Amenity[]> => {
+  try {
+    const response = await axiosInstance.get("/v1/amenities");
+    return response.data.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.data) {
+      const apiError = error.response.data as ApiError;
+      throw new Error(typeof apiError.message === "string" ? apiError.message : apiError.error || "An error occurred");
+    }
+    throw new Error("Failed to fetch amenities");
+  }
+};
+
+export const useAmenities = () => {
+  return useQuery({
+    queryKey: ["amenities"],
+    queryFn: fetchAllAmenities,
+    staleTime: 1000 * 60 * 60, // Consider amenities fresh for 1 hour
   });
 };
