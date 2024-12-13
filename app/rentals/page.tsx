@@ -7,9 +7,10 @@ import { formatCurrency } from "@/utils/format";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import FormContainer from "@/components/form/FormContainer";
 import { IconButton } from "@/components/form/Buttons";
-import { useMyProperties } from "@/utils/properties";
+import { useMyProperties, useDeleteProperty } from "@/utils/properties";
 import { PropertyWithDetails } from "@/types/property";
 import LoadingTable from "@/components/reservation/LoadingTable";
+import { useToast } from "@/components/ui/use-toast";
 
 function RentalsPage() {
   const { data: rentals, error, isLoading } = useMyProperties();
@@ -75,15 +76,25 @@ function RentalsPage() {
 }
 
 function DeleteRental({ propertyId }: { propertyId: string }) {
-  // TODO(@hudsonn): Implement delete action for rentals
-  const deleteRental = async () => {
-    return { message: "Delete operation placeholder" };
+  const { toast } = useToast();
+  const deleteProperty = useDeleteProperty();
+
+  const handleDelete = async (prevState: { message: string }, formData: FormData) => {
+    try {
+      await deleteProperty.mutateAsync(propertyId);
+      toast({ description: "Property deleted successfully" });
+      return { message: "Property deleted successfully" };
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        description: error instanceof Error ? error.message : "Failed to delete property",
+      });
+      return { message: error instanceof Error ? error.message : "Failed to delete property" };
+    }
   };
 
-  //  const deleteRental = deleteRentalAction.bind(null, { propertyId });
-
   return (
-    <FormContainer action={deleteRental}>
+    <FormContainer action={handleDelete}>
       <IconButton actionType="delete" />
     </FormContainer>
   );

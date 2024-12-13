@@ -155,3 +155,19 @@ export const useCreateProperty = () => {
     },
   });
 };
+
+// Add delete property mutation hook
+export const useDeleteProperty = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (propertyId: string) => {
+      const response = await axiosInstance.delete(`/v1/properties/${propertyId}`);
+      return response.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["properties"] });
+      queryClient.invalidateQueries({ queryKey: ["myProperties"] });
+    },
+  });
+};
