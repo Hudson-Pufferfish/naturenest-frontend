@@ -135,3 +135,25 @@ export const useDeleteOthersReservation = () => {
     },
   });
 };
+
+// Add this interface at the top with other interfaces
+interface UpdateBookingRequest {
+  startDate?: string;
+  endDate?: string;
+  numberOfGuests?: number;
+}
+
+// Add this hook
+export const useUpdateBooking = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ bookingId, data }: { bookingId: string; data: UpdateBookingRequest }) => {
+      const response = await axiosInstance.patch(`/v1/reservations/${bookingId}`, data);
+      return response.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["myBookings"] });
+    },
+  });
+};
