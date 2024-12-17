@@ -4,20 +4,29 @@ import { useMyBookings, useCancelBooking } from "@/utils/reservations";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import Link from "next/link";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, isBefore, startOfDay } from "date-fns";
 import FormContainer from "@/components/form/FormContainer";
 import { IconButton } from "@/components/form/Buttons";
 import LoadingTable from "@/components/ui/loading-table";
 import EmptyList from "@/components/home/EmptyList";
 import { useQueryClient } from "@tanstack/react-query";
 
-function DeleteBooking({ bookingId }: { bookingId: string }) {
+function DeleteBooking({ bookingId, isPast }: { bookingId: string; isPast: boolean }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const cancelBooking = useCancelBooking();
 
   const handleDelete = async (prevState: { message: string }, formData: FormData) => {
     try {
+      if (isPast) {
+        toast({
+          variant: "destructive",
+          title: "Cannot Cancel Past Booking",
+          description: "You can only cancel upcoming bookings.",
+        });
+        return { message: "Cannot cancel past booking" };
+      }
+
       await cancelBooking.mutateAsync(bookingId);
       await queryClient.invalidateQueries({ queryKey: ["myBookings"] });
       toast({ description: "Booking cancelled successfully" });
@@ -61,6 +70,12 @@ export default function BookingsPage() {
     return <EmptyList heading="No bookings to display." message="Browse properties to make a booking." />;
   }
 
+  const isBookingPast = (startDate: string) => {
+    const bookingStartDate = startOfDay(parseISO(startDate));
+    const today = startOfDay(new Date());
+    return isBefore(bookingStartDate, today);
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
@@ -100,26 +115,33 @@ export default function BookingsPage() {
       </div>
 
       <div className="grid gap-4">
-        {bookings.map((booking) => (
-          <div key={booking.id} className="border rounded-lg p-4 flex justify-between items-center">
-            <div>
-              <h2 className="text-xl font-semibold">{booking.property.name}</h2>
-              <p className="text-gray-600">
-                {format(parseISO(booking.startDate), "MMM d, yyyy")} - {format(parseISO(booking.endDate), "MMM d, yyyy")}
-              </p>
-              <p className="text-gray-600">
-                {booking.numberOfGuests} guest{booking.numberOfGuests !== 1 ? "s" : ""}
-              </p>
-              <p className="text-gray-600">Total: ${booking.totalPrice}</p>
+        {bookings.map((booking) => {
+          const isPast = isBookingPast(booking.startDate);
+          return (
+            <div key={booking.id} className="border rounded-lg p-4 flex justify-between items-center">
+              <div>
+                <h2 className="text-xl font-semibold">{booking.property.name}</h2>
+                <p className="text-gray-600">
+                  {format(parseISO(booking.startDate), "MMM d, yyyy")} - {format(parseISO(booking.endDate), "MMM d, yyyy")}
+                </p>
+                <p className="text-gray-600">
+                  {booking.numberOfGuests} guest{booking.numberOfGuests !== 1 ? "s" : ""}
+                </p>
+                <p className="text-gray-600">Total: ${booking.totalPrice}</p>
+              </div>
+              <div className="flex gap-2">
+                {!isPast && (
+                  <>
+                    <Link href={`/bookings/${booking.id}/edit`}>
+                      <IconButton actionType="edit" />
+                    </Link>
+                    <DeleteBooking bookingId={booking.id} isPast={isPast} />
+                  </>
+                )}
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Link href={`/bookings/${booking.id}/edit`}>
-                <IconButton actionType="edit" />
-              </Link>
-              <DeleteBooking bookingId={booking.id} />
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {bookings.length === pageSize && (
