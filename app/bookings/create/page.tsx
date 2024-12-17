@@ -4,7 +4,7 @@ import { useCreateBooking } from "@/utils/reservations";
 import FormContainer from "@/components/form/FormContainer";
 import FormInput from "@/components/form/FormInput";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useToast } from "@/components/ui/use-toast";
+// import { useToast } from "@/components/ui/use-toast";
 import { usePropertyById } from "@/utils/properties";
 import { format, parseISO, startOfDay } from "date-fns";
 import { SubmitButton } from "@/components/form/Buttons";
@@ -13,7 +13,7 @@ export default function CreateBookingPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const propertyId = searchParams.get("propertyId");
-  const { toast } = useToast();
+  //   const { toast } = useToast();
 
   const { data: property } = usePropertyById(propertyId || "");
   const createBooking = useCreateBooking();
