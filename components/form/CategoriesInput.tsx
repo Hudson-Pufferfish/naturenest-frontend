@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const name = "category";
 
-function CategoriesInput({ defaultValue }: { defaultValue?: string }) {
+function CategoriesInput({ name, defaultValue }: { name?: string; defaultValue?: string }) {
   const { data: categories, isLoading, getIcon } = useCategories();
 
   if (isLoading) {

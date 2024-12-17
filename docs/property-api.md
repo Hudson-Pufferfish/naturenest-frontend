@@ -129,6 +129,47 @@ PATCH /v1/properties/:propertyId
 // Response: Property
 ```
 
+The update property endpoint allows property owners to modify their property details:
+
+Endpoint: PATCH /v1/properties/:propertyId
+
+Authentication:
+
+- Requires JWT token in Authorization header
+- Only property owner can update their properties
+
+Request Body (all fields optional):
+{
+"name": string, // max 20 chars
+"tagLine": string, // max 30 chars
+"description": string,
+"price": number,
+"coverUrl": string, // valid URL
+"guests": number,
+"bedrooms": number,
+"beds": number,
+"baths": number,
+"countryCode": string, // ISO 3166-1 alpha-2 (e.g., "US")
+"categoryId": string, // must be valid category ID
+"amenityIds": string[] // array of valid amenity IDs
+}
+
+Validation:
+
+- If categoryId provided: Must be valid existing category
+- If amenityIds provided: All amenity IDs must exist
+- Property must exist and belong to authenticated user
+
+Response:
+
+- 200: Successfully updated property
+- 400: Invalid input data (wrong format, invalid category/amenities)
+- 401: Not authenticated
+- 403: Not property owner
+- 404: Property not found
+
+Example usage with React Query:
+
 ### Delete Property
 
 ```

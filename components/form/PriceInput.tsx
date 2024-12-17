@@ -3,10 +3,10 @@ import { Input } from "../ui/input";
 
 type PriceInputProps = {
   defaultValue?: number;
+  name?: string;
 };
 
-function PriceInput({ defaultValue }: PriceInputProps) {
-  const name = "price";
+function PriceInput({ name, defaultValue }: PriceInputProps) {
   return (
     <div className="mb-2">
       <Label htmlFor={name} className="capitalize">
