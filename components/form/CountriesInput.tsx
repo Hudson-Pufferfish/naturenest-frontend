@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 const name = "country";
 
-function CountriesInput({ defaultValue }: { defaultValue?: string }) {
+function CountriesInput({ name, defaultValue }: { name?: string; defaultValue?: string }) {
   return (
     <div className="mb-2">
       <Label htmlFor={name} className="capitalize">

@@ -113,12 +113,12 @@ function EditRentalPage({ params }: { params: { id: string } }) {
           <div className="grid md:grid-cols-2 gap-8 mb-4">
             <FormInput name="name" type="text" label="Name (20 limit)" defaultValue={property.name} />
             <FormInput name="tagLine" type="text" label="Tagline (30 limit)" defaultValue={property.tagLine} />
-            <PriceInput defaultValue={property.price} />
-            <CategoriesInput defaultValue={property.categoryId} />
+            <PriceInput name="price" defaultValue={property.price} />
+            <CategoriesInput name="categoryId" defaultValue={property.categoryId} />
           </div>
           <TextAreaInput name="description" labelText="Description (10 - 1000 words)" defaultValue={property.description} />
           <div className="grid sm:grid-cols-2 gap-8 mt-4">
-            <CountriesInput defaultValue={property.countryCode} />
+            <CountriesInput name="countryCode" defaultValue={property.countryCode} />
             <FormInput
               name="coverUrl"
               type="url"
