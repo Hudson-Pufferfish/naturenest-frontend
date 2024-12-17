@@ -57,7 +57,7 @@ function BookingsPage() {
             const today = startOfToday();
 
             const numberOfNights = differenceInDays(endDateObj, startDateObj);
-            const canCancel = !isBefore(startDateObj, today); // Can only cancel if start date is today or later
+            const canEditOrCancel = !isBefore(startDateObj, today); // Can only edit or cancel if start date is today or later
 
             const formattedStartDate = formatDate(startDateObj);
             const formattedEndDate = formatDate(endDateObj);
@@ -76,7 +76,18 @@ function BookingsPage() {
                 <TableCell>{formatCurrency(totalPrice)}</TableCell>
                 <TableCell>{formattedStartDate}</TableCell>
                 <TableCell>{formattedEndDate}</TableCell>
-                <TableCell>{canCancel && <DeleteBooking bookingId={id} />}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-x-2">
+                    {canEditOrCancel && (
+                      <>
+                        <Link href={`/bookings/${id}/edit`}>
+                          <IconButton actionType="edit" />
+                        </Link>
+                        <DeleteBooking bookingId={id} />
+                      </>
+                    )}
+                  </div>
+                </TableCell>
               </TableRow>
             );
           })}
