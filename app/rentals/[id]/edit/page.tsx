@@ -41,16 +41,16 @@ function EditRentalPage({ params }: { params: { id: string } }) {
       // Get all form values first
       const formValues = {
         name: formData.get("name") as string,
-        tagLine: formData.get("tagline") as string, // Note: form uses "tagline" but API expects "tagLine"
+        tagLine: formData.get("tagLine") as string,
         description: formData.get("description") as string,
         price: Number(formData.get("price")),
-        categoryId: formData.get("category") as string,
+        categoryId: formData.get("categoryId") as string,
         coverUrl: formData.get("coverUrl") as string,
         guests: Number(formData.get("guests")),
         bedrooms: Number(formData.get("bedrooms")),
         beds: Number(formData.get("beds")),
         baths: Number(formData.get("baths")),
-        countryCode: formData.get("country") as string,
+        countryCode: formData.get("countryCode") as string,
         amenityIds: JSON.parse((formData.get("amenityIds") as string) || "[]"),
       };
 
@@ -112,7 +112,7 @@ function EditRentalPage({ params }: { params: { id: string } }) {
         <FormContainer action={handleFormAction}>
           <div className="grid md:grid-cols-2 gap-8 mb-4">
             <FormInput name="name" type="text" label="Name (20 limit)" defaultValue={property.name} />
-            <FormInput name="tagline" type="text" label="Tagline (30 limit)" defaultValue={property.tagLine} />
+            <FormInput name="tagLine" type="text" label="Tagline (30 limit)" defaultValue={property.tagLine} />
             <PriceInput defaultValue={property.price} />
             <CategoriesInput defaultValue={property.categoryId} />
           </div>
