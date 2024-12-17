@@ -5,7 +5,7 @@ import FormContainer from "@/components/form/FormContainer";
 import FormInput from "@/components/form/FormInput";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/use-toast";
-import { format, parseISO, startOfDay, isBefore } from "date-fns";
+import { format, parseISO, startOfDay, isBefore, isValid } from "date-fns";
 import { SubmitButton } from "@/components/form/Buttons";
 import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -74,6 +74,41 @@ export default function EditBookingPage({ params }: { params: { id: string } }) 
     return null;
   }
 
+  const validateDates = (startDateStr: string, endDateStr: string) => {
+    const todayDate = startOfDay(new Date());
+    const startDateObj = startOfDay(parseISO(startDateStr));
+    const endDateObj = startOfDay(parseISO(endDateStr));
+
+    if (!isValid(startDateObj) || !isValid(endDateObj)) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Date Format",
+        description: "Please enter valid dates",
+      });
+      return false;
+    }
+
+    if (isBefore(startDateObj, todayDate)) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Check-in Date",
+        description: "Check-in date must be today or later",
+      });
+      return false;
+    }
+
+    if (isBefore(endDateObj, startDateObj) || endDateObj.getTime() === startDateObj.getTime()) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Check-out Date",
+        description: "Check-out date must be at least one day after check-in date",
+      });
+      return false;
+    }
+
+    return true;
+  };
+
   const minEndDate = startDate || today;
   const initialStartDate = format(startOfDay(parseISO(booking.startDate)), "yyyy-MM-dd");
 
@@ -83,25 +118,12 @@ export default function EditBookingPage({ params }: { params: { id: string } }) 
       const endDateStr = formData.get("endDate") as string;
       const numberOfGuests = parseInt(formData.get("numberOfGuests") as string);
 
+      if (!validateDates(startDateStr, endDateStr)) {
+        return { message: "Date validation failed" };
+      }
+
       const startDate = format(startOfDay(parseISO(startDateStr)), "yyyy-MM-dd");
       const endDate = format(startOfDay(parseISO(endDateStr)), "yyyy-MM-dd");
-
-      if (startDate < today) {
-        toast({
-          variant: "destructive",
-          title: "Invalid Date",
-          description: "Check-in date cannot be in the past",
-        });
-        return { message: "Check-in date cannot be in the past" };
-      }
-      if (endDate < startDate) {
-        toast({
-          variant: "destructive",
-          title: "Invalid Date",
-          description: "Check-out date must be after check-in date",
-        });
-        return { message: "Check-out date must be after check-in date" };
-      }
 
       await updateBooking.mutateAsync({
         bookingId: params.id,
