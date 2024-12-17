@@ -68,20 +68,8 @@ function EditBookingPage({ params }: { params: { id: string } }) {
         <h3 className="text-lg mb-4 font-medium">Booking Details</h3>
         <FormContainer action={handleFormAction}>
           <div className="grid md:grid-cols-2 gap-8 mb-4">
-            <FormInput
-              name="startDate"
-              type="date"
-              label="Check In Date"
-              defaultValue={format(new Date(booking.startDate), "yyyy-MM-dd")}
-              min={format(today, "yyyy-MM-dd")}
-            />
-            <FormInput
-              name="endDate"
-              type="date"
-              label="Check Out Date"
-              defaultValue={format(new Date(booking.endDate), "yyyy-MM-dd")}
-              min={format(today, "yyyy-MM-dd")}
-            />
+            <FormInput name="startDate" type="date" label="Check In Date" defaultValue={format(new Date(booking.startDate), "yyyy-MM-dd")} />
+            <FormInput name="endDate" type="date" label="Check Out Date" defaultValue={format(new Date(booking.endDate), "yyyy-MM-dd")} />
           </div>
           <CounterInput detail="guests" defaultValue={booking.numberOfGuests} />
           <SubmitButton text="update booking" className="mt-8" />
