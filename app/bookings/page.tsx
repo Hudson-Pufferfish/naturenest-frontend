@@ -1,109 +1,25 @@
 "use client";
 
+import { useMyBookings, useCancelBooking } from "@/utils/reservations";
+import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
 import Link from "next/link";
-import EmptyList from "@/components/home/EmptyList";
-import CountryFlagAndName from "@/components/card/CountryFlagAndName";
-import { formatDate, formatCurrency } from "@/utils/format";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { format, parseISO } from "date-fns";
 import FormContainer from "@/components/form/FormContainer";
 import { IconButton } from "@/components/form/Buttons";
 import LoadingTable from "@/components/ui/loading-table";
-import { useMyBookings, useDeleteBooking } from "@/utils/reservations";
-import { useToast } from "@/components/ui/use-toast";
-import { differenceInDays, isBefore, startOfToday } from "date-fns";
-
-function BookingsPage() {
-  const { data: bookings, error, isLoading } = useMyBookings();
-
-  if (isLoading) {
-    return (
-      <div className="mt-16">
-        <LoadingTable />
-      </div>
-    );
-  }
-
-  if (error) {
-    return <EmptyList heading="Failed to load bookings." message="Please try again later." />;
-  }
-
-  if (!bookings || bookings.length === 0) {
-    return <EmptyList heading="No bookings to display." message="Browse properties to make a booking." />;
-  }
-
-  return (
-    <div className="mt-16">
-      <h4 className="mb-4 capitalize">total bookings : {bookings.length}</h4>
-      <Table>
-        <TableCaption>A list of your recent bookings.</TableCaption>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Property Name</TableHead>
-            <TableHead>Country</TableHead>
-            <TableHead>Nights</TableHead>
-            <TableHead>Total</TableHead>
-            <TableHead>Check In</TableHead>
-            <TableHead>Check Out</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {bookings.map((booking) => {
-            const { id, totalPrice, startDate, endDate } = booking;
-            const { id: propertyId, name, countryCode } = booking.property;
-
-            const startDateObj = new Date(startDate);
-            const endDateObj = new Date(endDate);
-            const today = startOfToday();
-
-            const numberOfNights = differenceInDays(endDateObj, startDateObj);
-            const canEditOrCancel = !isBefore(startDateObj, today); // Can only edit or cancel if start date is today or later
-
-            const formattedStartDate = formatDate(startDateObj);
-            const formattedEndDate = formatDate(endDateObj);
-
-            return (
-              <TableRow key={id}>
-                <TableCell>
-                  <Link href={`/properties/${propertyId}`} className="underline text-muted-foreground tracking-wide">
-                    {name}
-                  </Link>
-                </TableCell>
-                <TableCell>
-                  <CountryFlagAndName countryCode={countryCode} />
-                </TableCell>
-                <TableCell>{numberOfNights}</TableCell>
-                <TableCell>{formatCurrency(totalPrice)}</TableCell>
-                <TableCell>{formattedStartDate}</TableCell>
-                <TableCell>{formattedEndDate}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-x-2">
-                    {canEditOrCancel && (
-                      <>
-                        <Link href={`/bookings/${id}/edit`}>
-                          <IconButton actionType="edit" />
-                        </Link>
-                        <DeleteBooking bookingId={id} />
-                      </>
-                    )}
-                  </div>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </div>
-  );
-}
+import EmptyList from "@/components/home/EmptyList";
+import { useQueryClient } from "@tanstack/react-query";
 
 function DeleteBooking({ bookingId }: { bookingId: string }) {
   const { toast } = useToast();
-  const deleteBooking = useDeleteBooking();
+  const queryClient = useQueryClient();
+  const cancelBooking = useCancelBooking();
 
   const handleDelete = async (prevState: { message: string }, formData: FormData) => {
     try {
-      await deleteBooking.mutateAsync(bookingId);
+      await cancelBooking.mutateAsync(bookingId);
+      await queryClient.invalidateQueries({ queryKey: ["myBookings"] });
       toast({ description: "Booking cancelled successfully" });
       return { message: "Booking cancelled successfully" };
     } catch (error) {
@@ -122,4 +38,100 @@ function DeleteBooking({ bookingId }: { bookingId: string }) {
   );
 }
 
-export default BookingsPage;
+export default function BookingsPage() {
+  const [status, setStatus] = useState<"upcoming" | "past" | "all">("all");
+  const [page, setPage] = useState(0);
+  const pageSize = 10;
+
+  const { data: bookings = [], isLoading } = useMyBookings({
+    skip: page * pageSize,
+    take: pageSize,
+    status,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="mt-16">
+        <LoadingTable />
+      </div>
+    );
+  }
+
+  if (!bookings?.length) {
+    return <EmptyList heading="No bookings to display." message="Browse properties to make a booking." />;
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">My Bookings</h1>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setStatus("all")}
+            className={`px-4 py-2 rounded-md transition-colors ${
+              status === "all"
+                ? "bg-orange-500 text-white dark:bg-orange-600"
+                : "bg-gray-100 text-gray-700 hover:bg-orange-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-orange-900/30"
+            }`}
+          >
+            All
+          </button>
+          <button
+            onClick={() => setStatus("upcoming")}
+            className={`px-4 py-2 rounded-md transition-colors ${
+              status === "upcoming"
+                ? "bg-orange-500 text-white dark:bg-orange-600"
+                : "bg-gray-100 text-gray-700 hover:bg-orange-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-orange-900/30"
+            }`}
+          >
+            Upcoming
+          </button>
+          <button
+            onClick={() => setStatus("past")}
+            className={`px-4 py-2 rounded-md transition-colors ${
+              status === "past"
+                ? "bg-orange-500 text-white dark:bg-orange-600"
+                : "bg-gray-100 text-gray-700 hover:bg-orange-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-orange-900/30"
+            }`}
+          >
+            Past
+          </button>
+        </div>
+      </div>
+
+      <div className="grid gap-4">
+        {bookings.map((booking) => (
+          <div key={booking.id} className="border rounded-lg p-4 flex justify-between items-center">
+            <div>
+              <h2 className="text-xl font-semibold">{booking.property.name}</h2>
+              <p className="text-gray-600">
+                {format(parseISO(booking.startDate), "MMM d, yyyy")} - {format(parseISO(booking.endDate), "MMM d, yyyy")}
+              </p>
+              <p className="text-gray-600">
+                {booking.numberOfGuests} guest{booking.numberOfGuests !== 1 ? "s" : ""}
+              </p>
+              <p className="text-gray-600">Total: ${booking.totalPrice}</p>
+            </div>
+            <div className="flex gap-2">
+              <Link href={`/bookings/${booking.id}/edit`}>
+                <IconButton actionType="edit" />
+              </Link>
+              <DeleteBooking bookingId={booking.id} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {bookings.length === pageSize && (
+        <div className="mt-4 flex justify-center">
+          <button
+            onClick={() => setPage((p) => p + 1)}
+            className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 transition-colors"
+          >
+            Load More
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
