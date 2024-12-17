@@ -3,28 +3,16 @@ import BreadCrumbs from "@/components/properties/BreadCrumbs";
 import ImageContainer from "@/components/properties/ImageContainer";
 import PropertyDetails from "@/components/properties/PropertyDetails";
 import { Separator } from "@/components/ui/separator";
-import { redirect } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import Description from "@/components/properties/Description";
 import Amenities from "@/components/properties/Amenities";
 import { usePropertyById } from "@/utils/properties";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/utils/format";
-import dynamic from "next/dynamic";
+import { Button } from "@/components/ui/button";
 
-// TODO: Implement these components later
-// import FavoriteToggleButton from "@/components/card/FavoriteToggleButton";
-// import PropertyRating from "@/components/card/PropertyRating";
-// import ShareButton from "@/components/properties/ShareButton";
-// import UserInfo from "@/components/properties/UserInfo";
-// import SubmitReview from "@/components/reviews/SubmitReview";
-// import PropertyReviews from "@/components/reviews/PropertyReviews";
-
-// const DynamicBookingWrapper = dynamic(() => import("@/components/booking/BookingWrapper"), {
-//   ssr: false,
-//   loading: () => <Skeleton className="h-[200px] w-full" />,
-// });
-
-function PropertyDetailsPage({ params }: { params: { id: string } }) {
+export default function PropertyDetailsPage({ params }: { params: { id: string } }) {
+  const router = useRouter();
   const { data: property, isLoading, error } = usePropertyById(params.id);
 
   if (isLoading) {
@@ -54,41 +42,34 @@ function PropertyDetailsPage({ params }: { params: { id: string } }) {
   const details = { baths, bedrooms, beds, guests };
 
   return (
-    <section>
+    <section className="container mx-auto px-4 py-8">
       <BreadCrumbs name={property.name} />
       <header className="flex justify-between items-center mt-4">
         <h1 className="text-4xl font-bold capitalize">{property.tagLine}</h1>
-        <div className="flex items-center gap-x-4">
-          {/* TODO: Implement share and favorite buttons */}
-          {/* <ShareButton name={property.name} propertyId={property.id} /> */}
-          {/* <FavoriteToggleButton propertyId={property.id} /> */}
-        </div>
       </header>
       <ImageContainer mainImage={property.coverUrl} name={property.name} />
       <section className="lg:grid lg:grid-cols-12 gap-x-12 mt-12">
         <div className="lg:col-span-8">
           <div className="flex gap-x-4 items-center">
             <h1 className="text-xl font-bold">{property.name}</h1>
-            {/* TODO: Implement rating component */}
-            {/* <PropertyRating inPage propertyId={property.id} /> */}
           </div>
           <PropertyDetails details={details} />
-          {/* TODO: Implement user info component */}
-          {/* <UserInfo profile={property.creator} /> */}
           <Separator className="mt-4" />
           <Description description={property.description} />
-          {/* TODO: Update amenities component to handle the new data structure */}
           <Amenities amenities={JSON.stringify(property.amenities || [])} />
         </div>
-        <div className="lg:col-span-4 flex flex-col items-center">
-          {/* calendar */}
-          {/* <DynamicBookingWrapper propertyId={property.id} price={property.price} bookings={property.reservations} /> */}
+        <div className="lg:col-span-4">
+          <div className="sticky top-4 bg-card rounded-lg border p-6 space-y-4 shadow-lg">
+            <div className="flex justify-between items-center mb-4">
+              <p className="text-2xl font-bold">{formatCurrency(property.price)}</p>
+              <p className="text-sm text-muted-foreground">/night</p>
+            </div>
+            <Button className="w-full text-lg font-semibold py-6" size="lg" onClick={() => router.push(`/bookings/create?propertyId=${property.id}`)}>
+              Book Now
+            </Button>
+          </div>
         </div>
       </section>
-      {/* TODO: Implement reviews section */}
-      {/* <PropertyReviews propertyId={property.id} /> */}
     </section>
   );
 }
-
-export default PropertyDetailsPage;
