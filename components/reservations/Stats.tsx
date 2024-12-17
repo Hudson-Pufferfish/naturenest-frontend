@@ -16,9 +16,9 @@ function Stats() {
 
   return (
     <div className="mt-8 grid md:grid-cols-2 gap-4 lg:grid-cols-3">
-      <StatsCard title="properties" value={stats.totalProperties} />
-      <StatsCard title="nights" value={stats.totalNightsBookedFromAllProperties} />
-      <StatsCard title="amount" value={formatCurrency(stats.totalIncomeFromAllProperties)} />
+      <StatsCard title="Total Properties" value={stats.totalProperties} />
+      <StatsCard title="Nights Booked" value={stats.totalNightsBookedFromAllProperties} />
+      <StatsCard title="Income" value={formatCurrency(stats.totalIncomeFromAllProperties)} />
     </div>
   );
 }
