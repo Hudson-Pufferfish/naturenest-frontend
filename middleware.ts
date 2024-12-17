@@ -31,5 +31,16 @@ export function middleware(request: NextRequest) {
 
 // Configure the paths that trigger the middleware
 export const config = {
-  matcher: [...protectedPaths, ...authPaths],
+  matcher: [
+    "/favorites",
+    "/bookings",
+    "/reviews",
+    "/reservations",
+    "/rentals/create",
+    "/rentals/my",
+    "/profile",
+    "/admin",
+    "/auth/sign-in",
+    "/auth/register",
+  ],
 };

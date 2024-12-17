@@ -38,6 +38,13 @@ export interface Amenity {
   description?: string;
 }
 
+// Add this interface
+interface PropertyStats {
+  totalProperties: number;
+  totalNightsBookedFromAllProperties: number;
+  totalIncomeFromAllProperties: number;
+}
+
 // Fetch properties with filters
 const fetchProperties = async (params: FetchPropertiesParams = {}): Promise<Property[]> => {
   try {
@@ -180,7 +187,7 @@ export const useDeleteProperty = () => {
 };
 
 // Add this function to fetch a single property with details
-const fetchPropertyById = async (propertyId: string): Promise<Property> => {
+const fetchPropertyById = async (propertyId: string): Promise<PropertyWithDetails> => {
   try {
     const response = await axiosInstance.get(`/v1/properties/${propertyId}`);
     return response.data.data;
@@ -194,7 +201,7 @@ const fetchPropertyById = async (propertyId: string): Promise<Property> => {
 };
 
 // Add this hook
-export const useProperty = (propertyId: string) => {
+export const usePropertyById = (propertyId: string) => {
   return useQuery({
     queryKey: ["property", propertyId],
     queryFn: () => fetchPropertyById(propertyId),
@@ -207,24 +214,13 @@ export const useProperty = (propertyId: string) => {
   });
 };
 
-// Add this function to utils/properties.ts
-const fetchAllAmenities = async (): Promise<Amenity[]> => {
-  try {
-    const response = await axiosInstance.get("/v1/amenities");
-    return response.data.data;
-  } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.data) {
-      const apiError = error.response.data as ApiError;
-      throw new Error(typeof apiError.message === "string" ? apiError.message : apiError.error || "An error occurred");
-    }
-    throw new Error("Failed to fetch amenities");
-  }
-};
-
-export const useAmenities = () => {
-  return useQuery({
-    queryKey: ["amenities"],
-    queryFn: fetchAllAmenities,
-    staleTime: 1000 * 60 * 60, // Consider amenities fresh for 1 hour
+// Add this hook
+export const useMyAllPropertyStats = () => {
+  return useQuery<PropertyStats>({
+    queryKey: ["propertyStats"],
+    queryFn: async () => {
+      const response = await axiosInstance.get("/v1/properties/my/stats");
+      return response.data.data;
+    },
   });
 };
