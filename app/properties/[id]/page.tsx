@@ -6,10 +6,10 @@ import { Separator } from "@/components/ui/separator";
 import { redirect } from "next/navigation";
 import Description from "@/components/properties/Description";
 import Amenities from "@/components/properties/Amenities";
-import { useProperty } from "@/utils/properties";
+import { usePropertyById } from "@/utils/properties";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LuDollarSign } from "react-icons/lu";
 import { formatCurrency } from "@/utils/format";
+import dynamic from "next/dynamic";
 
 // TODO: Implement these components later
 // import FavoriteToggleButton from "@/components/card/FavoriteToggleButton";
@@ -19,8 +19,13 @@ import { formatCurrency } from "@/utils/format";
 // import SubmitReview from "@/components/reviews/SubmitReview";
 // import PropertyReviews from "@/components/reviews/PropertyReviews";
 
+// const DynamicBookingWrapper = dynamic(() => import("@/components/booking/BookingWrapper"), {
+//   ssr: false,
+//   loading: () => <Skeleton className="h-[200px] w-full" />,
+// });
+
 function PropertyDetailsPage({ params }: { params: { id: string } }) {
-  const { data: property, isLoading, error } = useProperty(params.id);
+  const { data: property, isLoading, error } = usePropertyById(params.id);
 
   if (isLoading) {
     return (
@@ -75,13 +80,9 @@ function PropertyDetailsPage({ params }: { params: { id: string } }) {
           {/* TODO: Update amenities component to handle the new data structure */}
           <Amenities amenities={JSON.stringify(property.amenities || [])} />
         </div>
-        <div className="lg:col-span-4">
-          <div className="bg-muted p-4 rounded-lg">
-            <div className="flex items-center gap-x-1">
-              <span className="text-xl font-semibold">{formatCurrency(property.price)}</span>
-              <span className="text-sm text-muted-foreground">/night</span>
-            </div>
-          </div>
+        <div className="lg:col-span-4 flex flex-col items-center">
+          {/* calendar */}
+          {/* <DynamicBookingWrapper propertyId={property.id} price={property.price} bookings={property.reservations} /> */}
         </div>
       </section>
       {/* TODO: Implement reviews section */}

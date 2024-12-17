@@ -55,6 +55,15 @@ Get user's reservations or property reservations.
 **Query Parameters:**
 
 - `propertyId` (optional): Get reservations for specific property
+- `skip` (optional): Number of items to skip (default: 0)
+- `take` (optional): Number of items to take (default: 10)
+
+**Notes:**
+
+- Results are ordered by creation date (newest first)
+- Maximum page size is 50 items
+- Requires authentication
+- If propertyId is provided, user must be the property owner
 
 **Response:**
 
@@ -88,6 +97,29 @@ data: ReservationWithDetails[];
 }
 ```
 
+### GET /v1/reservations/my
+
+Get current user's reservations with pagination and status filtering.
+
+**Query Parameters:**
+
+- `status` (optional): Filter reservations by status
+  - `upcoming`: Reservations with startDate >= today
+  - `past`: Reservations with endDate < today
+  - `all`: All reservations (default)
+- `skip` (optional): Number of items to skip (default: 0)
+- `take` (optional): Number of items to take (default: 10)
+
+**Response:**
+
+```typescript
+type GetMyReservationsResponse = {
+  status: 200;
+  message: "Success";
+  data: ReservationWithDetails[]; // Ordered by createdAt desc (most recent first)
+};
+```
+
 ### PATCH /v1/reservations/:reservationId
 
 Update a reservation. Only reservation creator or property owner can update.
@@ -111,24 +143,52 @@ Cancel a reservation. Only reservation creator or property owner can cancel.
 
 ### React Query Hooks
 
-```
+```typescript
+// Get all reservations (for property owner)
 export const useReservations = (propertyId?: string) => {
-return useQuery({
-queryKey: ['reservations', propertyId],
-queryFn: () => axios.get('/v1/reservations', { params: { propertyId } })
-});
-};
-export const useCreateReservation = () => {
-const queryClient = useQueryClient();
-return useMutation({
-mutationFn: (data: CreateReservationRequest) =>
-axios.post('/v1/reservations', data),
-onSuccess: () => {
-queryClient.invalidateQueries(['reservations']);
-}
-});
+  return useQuery({
+    queryKey: ["reservations", propertyId],
+    queryFn: () => axios.get("/v1/reservations", { params: { propertyId } }),
+  });
 };
 
+// Get my reservations (paginated with status filter)
+export const useMyReservations = (skip?: number, take?: number, status: "upcoming" | "past" | "all" = "all") => {
+  return useQuery({
+    queryKey: ["my-reservations", skip, take, status],
+    queryFn: () =>
+      axios.get("/v1/reservations/my", {
+        params: {
+          skip,
+          take,
+          status,
+        },
+      }),
+  });
+};
+
+// Create reservation
+export const useCreateReservation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateReservationRequest) => axios.post("/v1/reservations", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["reservations"]);
+      queryClient.invalidateQueries(["my-reservations"]); // Invalidate my reservations too
+    },
+  });
+};
+
+// Example usage with pagination and status filter:
+const MyReservationsPage = () => {
+  const [page, setPage] = useState(0);
+  const [status, setStatus] = useState<"upcoming" | "past" | "all">("all");
+  const pageSize = 10;
+
+  const { data, isLoading } = useMyReservations(page * pageSize, pageSize, status);
+
+  // ... pagination and status filter UI
+};
 ```
 
 ### Zustand Store
@@ -161,7 +221,7 @@ guestCount: 1
 
 1. Dates must be in YYYY-MM-DD format
 2. End date must be after start date
-3. Number of guests must be at least 1
+3. Number of guests must be at least 1 and should not exceed the property's capacity (guests)
 4. Total price is calculated server-side based on:
    - Number of nights
    - Property price per night
@@ -174,3 +234,23 @@ guestCount: 1
 - 401: Not authenticated
 - 403: Not authorized (not owner/creator)
 - 404: Reservation/Property not found
+
+### Validation Rules
+
+1. Dates:
+
+   - Must be in YYYY-MM-DD format
+   - End date must be after start date
+   - Start date must be in the future (for new reservations)
+
+2. Number of guests:
+
+   - Must be at least 1
+   - Must not exceed property's maximum guest capacity (property.guests)
+   - Required for new reservations
+   - Optional for updates
+
+3. Pagination:
+   - Default page size: 10 items
+   - Maximum page size: 50 items
+   - Skip must be >= 0

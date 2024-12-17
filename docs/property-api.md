@@ -136,51 +136,70 @@ DELETE /v1/properties/:propertyId
 // Response: Property
 ```
 
-## Example Implementation
+### Get My Property Stats
+
+```typescript
+GET /v1/properties/my/stats
+
+// Response
+interface PropertyStats {
+  totalProperties: number;              // Total number of properties owned
+  totalNightsBookedFromAllProperties: number;  // Total nights booked across all properties
+  totalIncomeFromAllProperties: number;        // Total income from all properties
+}
+
+// Response example
+{
+  status: 200,
+  message: 'Success',
+  data: {
+    totalProperties: 5,              // Returns 0 if no properties
+    totalNightsBookedFromAllProperties: 150,  // Returns 0 if no completed reservations
+    totalIncomeFromAllProperties: 25000.0     // Returns 0 if no completed reservations
+  }
+}
+```
 
 ### React Query Hooks
 
-```
+```typescript
 // hooks/useProperties.ts
 export const useProperties = (params?: ListPropertiesParams) => {
-return useQuery({
-queryKey: ['properties', params],
-queryFn: () => axios.get('/v1/properties', { params })
-});
+  return useQuery({
+    queryKey: ["properties", params],
+    queryFn: () => axios.get("/v1/properties", { params }),
+  });
 };
+
 export const useMyProperties = (params?: MyPropertiesParams) => {
-return useQuery({
-queryKey: ['my-properties', params],
-queryFn: () => axios.get('/v1/properties/my', { params })
-});
+  return useQuery({
+    queryKey: ["my-properties", params],
+    queryFn: () => axios.get("/v1/properties/my", { params }),
+  });
 };
-export const usePropertyMutations = () => {
-const queryClient = useQueryClient();
-return {
-create: useMutation({
-mutationFn: (data: CreatePropertyRequest) =>
-axios.post('/v1/properties', data),
-onSuccess: () => {
-queryClient.invalidateQueries(['properties']);
-queryClient.invalidateQueries(['my-properties']);
-}
-}),
-update: useMutation({
-mutationFn: ({ id, data }: { id: string; data: Partial<CreatePropertyRequest> }) =>
-axios.patch(/v1/properties/${id}, data),
-onSuccess: () => {
-queryClient.invalidateQueries(['properties']);
-queryClient.invalidateQueries(['my-properties']);
-}
-}),
-delete: useMutation({
-mutationFn: (id: string) => axios.delete(/v1/properties/${id}),
-onSuccess: () => {
-queryClient.invalidateQueries(['properties']);
-queryClient.invalidateQueries(['my-properties']);
-}
-})
+
+// Add new hook for property stats
+export const useMyAllPropertyStats = () => {
+  return useQuery({
+    queryKey: ["my-all-property-stats"],
+    queryFn: () => axios.get("/v1/properties/my/stats"),
+  });
 };
+
+// Example usage:
+const PropertyStatsComponent = () => {
+  const { data, isLoading } = useMyAllPropertyStats();
+
+  if (isLoading) return <div>Loading stats...</div>;
+
+  return (
+    <div>
+      <h2>My Property Stats</h2>
+      <p>Total Properties: {data?.data.totalProperties}</p>
+      <p>Total Nights Booked: {data?.data.totalNightsBookedFromAllProperties}</p>
+      <p>Total Income: ${data?.data.totalIncomeFromAllProperties}</p>
+    </div>
+  );
 };
 ```
 

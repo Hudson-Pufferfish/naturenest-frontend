@@ -1,7 +1,6 @@
 "use client";
 
 import EmptyList from "@/components/home/EmptyList";
-// import { deleteRentalAction } from "@/utils/actions";
 import Link from "next/link";
 import { formatCurrency } from "@/utils/format";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -9,8 +8,8 @@ import FormContainer from "@/components/form/FormContainer";
 import { IconButton } from "@/components/form/Buttons";
 import { useMyProperties, useDeleteProperty } from "@/utils/properties";
 import { PropertyWithDetails } from "@/types/property";
-import LoadingTable from "@/components/reservation/LoadingTable";
 import { useToast } from "@/components/ui/use-toast";
+import LoadingTable from "@/components/ui/loading-table";
 
 function RentalsPage() {
   const { data: rentals, error, isLoading } = useMyProperties();
