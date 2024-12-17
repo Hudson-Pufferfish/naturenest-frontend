@@ -157,3 +157,31 @@ export const useUpdateBooking = () => {
     },
   });
 };
+
+// Add this function to fetch a single booking
+const fetchBookingById = async (bookingId: string): Promise<Reservation> => {
+  try {
+    const response = await axiosInstance.get(`/v1/reservations/${bookingId}`);
+    return response.data.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.data) {
+      const apiError = error.response.data as ApiError;
+      throw new Error(typeof apiError.message === "string" ? apiError.message : apiError.error || "An error occurred");
+    }
+    throw new Error("Failed to fetch booking details");
+  }
+};
+
+// Add this hook to fetch a single booking
+export const useBookingById = (bookingId: string) => {
+  return useQuery({
+    queryKey: ["booking", bookingId],
+    queryFn: () => fetchBookingById(bookingId),
+    retry: (failureCount, error) => {
+      if (error instanceof Error && error.message.includes("not found")) {
+        return false;
+      }
+      return failureCount < 2;
+    },
+  });
+};

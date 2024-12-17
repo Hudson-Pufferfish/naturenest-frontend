@@ -1,91 +1,144 @@
-// import FavoriteToggleButton from '@/components/card/FavoriteToggleButton';
-// import PropertyRating from '@/components/card/PropertyRating';
-// import BreadCrumbs from '@/components/properties/BreadCrumbs';
-// import ImageContainer from '@/components/properties/ImageContainer';
-// import PropertyDetails from '@/components/properties/PropertyDetails';
-// import ShareButton from '@/components/properties/ShareButton';
-// import UserInfo from '@/components/properties/UserInfo';
-// import { Separator } from '@/components/ui/separator';
-// import { fetchPropertyDetails, findExistingReview } from '@/utils/actions';
-// import { redirect } from 'next/navigation';
-// import Description from '@/components/properties/Description';
-// import Amenities from '@/components/properties/Amenities';
-// import dynamic from 'next/dynamic';
-// import { Skeleton } from '@/components/ui/skeleton';
-// import SubmitReview from '@/components/reviews/SubmitReview';
-// import PropertyReviews from '@/components/reviews/PropertyReviews';
-// import { auth } from '@clerk/nextjs/server';
-// const DynamicMap = dynamic(
-//   () => import('@/components/properties/PropertyMap'),
-//   {
-//     ssr: false,
-//     loading: () => <Skeleton className='h-[400px] w-full' />,
-//   }
-// );
+"use client";
 
-// const DynamicBookingWrapper = dynamic(
-//   () => import('@/components/booking/BookingWrapper'),
-//   {
-//     ssr: false,
-//     loading: () => <Skeleton className='h-[200px] w-full' />,
-//   }
-// );
+import { redirect } from "next/navigation";
+import FormContainer from "@/components/form/FormContainer";
+import FormInput from "@/components/form/FormInput";
+import CategoriesInput from "@/components/form/CategoriesInput";
+import PriceInput from "@/components/form/PriceInput";
+import TextAreaInput from "@/components/form/TextAreaInput";
+import CountriesInput from "@/components/form/CountriesInput";
+import CounterInput from "@/components/form/CounterInput";
+import AmenitiesInput from "@/components/form/AmenitiesInput";
+import { SubmitButton } from "@/components/form/Buttons";
+import { usePropertyById, useUpdateProperty, UpdatePropertyRequest } from "@/utils/properties";
+import { Amenity } from "@/types/amenity";
+import LoadingTable from "@/components/ui/loading-table";
+import EmptyList from "@/components/home/EmptyList";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/use-toast";
 
-// async function PropertyDetailsPage({ params }: { params: { id: string } }) {
-//   const property = await fetchPropertyDetails(params.id);
-//   if (!property) redirect('/');
-//   const { baths, bedrooms, beds, guests } = property;
-//   const details = { baths, bedrooms, beds, guests };
-//   const firstName = property.profile.firstName;
-//   const profileImage = property.profile.profileImage;
+function EditRentalPage({ params }: { params: { id: string } }) {
+  const router = useRouter();
+  const { toast } = useToast();
+  const { data: property, error, isLoading } = usePropertyById(params.id);
+  const updateProperty = useUpdateProperty();
 
-//   const { userId } = auth();
-//   const isNotOwner = property.profile.clerkId !== userId;
-//   const reviewDoesNotExist =
-//     userId && isNotOwner && !(await findExistingReview(userId, property.id));
-//   return (
-//     <section>
-//       <BreadCrumbs name={property.name} />
-//       <header className='flex justify-between items-center mt-4'>
-//         <h1 className='text-4xl font-bold capitalize'>{property.tagline}</h1>
-//         <div className='flex items-center gap-x-4'>
-//           {/* share button */}
-//           <ShareButton name={property.name} propertyId={property.id} />
-//           <FavoriteToggleButton propertyId={property.id} />
-//         </div>
-//       </header>
-//       <ImageContainer mainImage={property.image} name={property.name} />
-//       <section className='lg:grid lg:grid-cols-12 gap-x-12 mt-12'>
-//         <div className='lg:col-span-8'>
-//           <div className='flex gap-x-4 items-center'>
-//             <h1 className='text-xl font-bold'>{property.name} </h1>
-//             <PropertyRating inPage propertyId={property.id} />
-//           </div>
-//           <PropertyDetails details={details} />
-//           <UserInfo profile={{ firstName, profileImage }} />
-//           <Separator className='mt-4' />
-//           <Description description={property.description} />
-//           <Amenities amenities={property.amenities} />
-//           <DynamicMap countryCode={property.country} />
-//         </div>
-//         <div className='lg:col-span-4 flex flex-col items-center'>
-//           {/* calendar */}
-//           <DynamicBookingWrapper
-//             propertyId={property.id}
-//             price={property.price}
-//             bookings={property.bookings}
-//           />
-//         </div>
-//       </section>
-//       {/* after two column section */}
-//       {reviewDoesNotExist && <SubmitReview propertyId={property.id} />}
-//       <PropertyReviews propertyId={property.id} />
-//     </section>
-//   );
-// }
+  if (isLoading) {
+    return <LoadingTable />;
+  }
 
-// export default PropertyDetailsPage;
+  if (error || !property) {
+    return <EmptyList heading="Property not found" message="The property you're looking for doesn't exist." />;
+  }
 
-export default function EditPropertyPage() {
-  return <div>EditPropertyPage</div>;
+  const defaultAmenities = property.amenities || [];
+
+  const handleFormAction = async (prevState: { message: string }, formData: FormData) => {
+    try {
+      // Create update data object
+      const updateData: Partial<UpdatePropertyRequest> = {};
+
+      // Get all form values first
+      const formValues = {
+        name: formData.get("name") as string,
+        tagLine: formData.get("tagline") as string, // Note: form uses "tagline" but API expects "tagLine"
+        description: formData.get("description") as string,
+        price: Number(formData.get("price")),
+        categoryId: formData.get("category") as string,
+        coverUrl: formData.get("coverUrl") as string,
+        guests: Number(formData.get("guests")),
+        bedrooms: Number(formData.get("bedrooms")),
+        beds: Number(formData.get("beds")),
+        baths: Number(formData.get("baths")),
+        countryCode: formData.get("country") as string,
+        amenityIds: JSON.parse((formData.get("amenityIds") as string) || "[]"),
+      };
+
+      console.log("Form values:", formValues);
+      console.log("Current property:", property);
+
+      // Compare and add only changed values
+      if (formValues.name !== property.name) updateData.name = formValues.name;
+      if (formValues.tagLine !== property.tagLine) updateData.tagLine = formValues.tagLine;
+      if (formValues.description !== property.description) updateData.description = formValues.description;
+      if (formValues.price !== property.price) updateData.price = formValues.price;
+      if (formValues.categoryId !== property.categoryId) updateData.categoryId = formValues.categoryId;
+      if (formValues.coverUrl !== property.coverUrl) updateData.coverUrl = formValues.coverUrl;
+      if (formValues.guests !== property.guests) updateData.guests = formValues.guests;
+      if (formValues.bedrooms !== property.bedrooms) updateData.bedrooms = formValues.bedrooms;
+      if (formValues.beds !== property.beds) updateData.beds = formValues.beds;
+      if (formValues.baths !== property.baths) updateData.baths = formValues.baths;
+      if (formValues.countryCode !== property.countryCode) updateData.countryCode = formValues.countryCode;
+
+      // Handle amenities separately
+      const currentAmenityIds = (property.amenities || []).map((a) => a.id).sort();
+      const newAmenityIds = [...formValues.amenityIds].sort();
+      if (JSON.stringify(currentAmenityIds) !== JSON.stringify(newAmenityIds)) {
+        updateData.amenityIds = formValues.amenityIds;
+      }
+
+      // Basic validation
+      if (Object.keys(updateData).length === 0) {
+        throw new Error("No changes detected");
+      }
+
+      console.log("Final update data:", updateData);
+
+      // Send the update
+      await updateProperty.mutateAsync({
+        propertyId: params.id,
+        data: updateData,
+      });
+
+      toast({ description: "Property updated successfully!" });
+      router.push("/rentals");
+      return { message: "Success" };
+    } catch (error) {
+      console.error("Update error details:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to update property";
+      toast({
+        variant: "destructive",
+        description: errorMessage,
+      });
+      return { message: errorMessage };
+    }
+  };
+
+  return (
+    <section>
+      <h1 className="text-2xl font-semibold mb-8 capitalize">Edit Property</h1>
+      <div className="border p-8 rounded">
+        <h3 className="text-lg mb-4 font-medium">General Info</h3>
+        <FormContainer action={handleFormAction}>
+          <div className="grid md:grid-cols-2 gap-8 mb-4">
+            <FormInput name="name" type="text" label="Name (20 limit)" defaultValue={property.name} />
+            <FormInput name="tagline" type="text" label="Tagline (30 limit)" defaultValue={property.tagLine} />
+            <PriceInput defaultValue={property.price} />
+            <CategoriesInput defaultValue={property.categoryId} />
+          </div>
+          <TextAreaInput name="description" labelText="Description (10 - 1000 words)" defaultValue={property.description} />
+          <div className="grid sm:grid-cols-2 gap-8 mt-4">
+            <CountriesInput defaultValue={property.countryCode} />
+            <FormInput
+              name="coverUrl"
+              type="url"
+              label="Cover Image URL"
+              placeholder="https://example.com/image.jpg"
+              defaultValue={property.coverUrl}
+            />
+          </div>
+          <h3 className="text-lg mt-8 mb-4 font-medium">Accommodation Details</h3>
+          <CounterInput detail="guests" defaultValue={property.guests} />
+          <CounterInput detail="bedrooms" defaultValue={property.bedrooms} />
+          <CounterInput detail="beds" defaultValue={property.beds} />
+          <CounterInput detail="baths" defaultValue={property.baths} />
+          <h3 className="text-lg mt-10 mb-6 font-medium">Amenities</h3>
+          <AmenitiesInput defaultValue={defaultAmenities.map((amenity) => amenity.id)} />
+          <SubmitButton text="update rental" className="mt-12" />
+        </FormContainer>
+      </div>
+    </section>
+  );
 }
+
+export default EditRentalPage;

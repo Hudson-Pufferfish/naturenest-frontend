@@ -45,6 +45,22 @@ interface PropertyStats {
   totalIncomeFromAllProperties: number;
 }
 
+// Add this interface with other interfaces
+export interface UpdatePropertyRequest {
+  name: string;
+  tagLine: string;
+  description: string;
+  price: number;
+  categoryId: string;
+  coverUrl: string;
+  guests: number;
+  bedrooms: number;
+  beds: number;
+  baths: number;
+  countryCode: string;
+  amenityIds: string[];
+}
+
 // Fetch properties with filters
 const fetchProperties = async (params: FetchPropertiesParams = {}): Promise<Property[]> => {
   try {
@@ -221,6 +237,31 @@ export const useMyAllPropertyStats = () => {
     queryFn: async () => {
       const response = await axiosInstance.get("/v1/properties/my/stats");
       return response.data.data;
+    },
+  });
+};
+
+// Add this hook
+export const useUpdateProperty = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ propertyId, data }: { propertyId: string; data: Partial<UpdatePropertyRequest> }) => {
+      try {
+        const response = await axiosInstance.patch(`/v1/properties/${propertyId}`, data);
+        return response.data.data;
+      } catch (error) {
+        if (axios.isAxiosError(error) && error.response?.data) {
+          const apiError = error.response.data as ApiError;
+          console.error("API Error Details:", apiError);
+          throw new Error(typeof apiError.message === "string" ? apiError.message : apiError.error || "An error occurred");
+        }
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["properties"] });
+      queryClient.invalidateQueries({ queryKey: ["myProperties"] });
     },
   });
 };
