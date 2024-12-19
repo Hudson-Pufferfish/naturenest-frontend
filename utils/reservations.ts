@@ -2,6 +2,7 @@ import { Reservation } from "@/types/reservation";
 import axiosInstance from "@/utils/axiosInstance";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import { format, parseISO, startOfDay } from "date-fns";
 
 interface ApiError {
   statusCode: number;
@@ -9,15 +10,41 @@ interface ApiError {
   error: string;
 }
 
-// Fetch user's bookings/reservations
-const fetchMyBookings = async (): Promise<Reservation[]> => {
+export interface CreateBookingRequest {
+  propertyId: string;
+  startDate: string;
+  endDate: string;
+  numberOfGuests: number;
+}
+
+export interface UpdateBookingRequest {
+  startDate?: string;
+  endDate?: string;
+  numberOfGuests?: number;
+}
+
+// Fetch current user's bookings with pagination and status filter
+const fetchMyBookings = async (
+  params: {
+    skip?: number;
+    take?: number;
+    status?: "upcoming" | "past" | "all";
+  } = {}
+): Promise<Reservation[]> => {
   try {
-    const response = await axiosInstance.get("/v1/reservations/my");
+    const queryParams = new URLSearchParams();
+    if (params.skip !== undefined) queryParams.append("skip", params.skip.toString());
+    if (params.take !== undefined) queryParams.append("take", params.take.toString());
+    if (params.status) queryParams.append("status", params.status);
+
+    const queryString = queryParams.toString();
+    const url = `/v1/reservations/my${queryString ? `?${queryString}` : ""}`;
+
+    const response = await axiosInstance.get(url);
     return response.data.data;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.data) {
       const apiError = error.response.data as ApiError;
-
       // If it's a 404, return empty array
       if (error.response.status === 404) {
         return [];
@@ -42,26 +69,79 @@ const fetchMyBookings = async (): Promise<Reservation[]> => {
   }
 };
 
-// Hook to fetch user's bookings
-export const useMyBookings = () => {
+// Hook to fetch current user's bookings with pagination and filtering
+export const useMyBookings = ({
+  skip = 0,
+  take = 10,
+  status = "all",
+}: {
+  skip?: number;
+  take?: number;
+  status?: "upcoming" | "past" | "all";
+} = {}) => {
   return useQuery({
-    queryKey: ["myBookings"],
-    queryFn: fetchMyBookings,
+    queryKey: ["myBookings", { skip, take, status }],
+    queryFn: () => fetchMyBookings({ skip, take, status }),
+    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
     retry: (failureCount, error) => {
       if (error instanceof Error && (error.message.includes("Validation failed") || error.message.includes("Unauthorized"))) {
         return false;
       }
       return failureCount < 2;
     },
-    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
   });
 };
 
-// Hook to delete a booking
-export const useDeleteBooking = () => {
+// Create booking mutation hook
+export const useCreateBooking = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: ["createBooking"],
+    mutationFn: async (data: CreateBookingRequest) => {
+      // Ensure dates are in YYYY-MM-DD format
+      const formattedData = {
+        ...data,
+        startDate: format(startOfDay(parseISO(data.startDate)), "yyyy-MM-dd"),
+        endDate: format(startOfDay(parseISO(data.endDate)), "yyyy-MM-dd"),
+      };
+      const response = await axiosInstance.post("/v1/reservations", formattedData);
+      return response.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["myBookings"] });
+    },
+  });
+};
+
+// Update booking mutation hook
+export const useUpdateBooking = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["updateBooking"],
+    mutationFn: async ({ bookingId, data }: { bookingId: string; data: UpdateBookingRequest }) => {
+      // Ensure dates are in YYYY-MM-DD format if they exist
+      const formattedData = {
+        ...data,
+        startDate: data.startDate ? format(startOfDay(parseISO(data.startDate)), "yyyy-MM-dd") : undefined,
+        endDate: data.endDate ? format(startOfDay(parseISO(data.endDate)), "yyyy-MM-dd") : undefined,
+      };
+      const response = await axiosInstance.patch(`/v1/reservations/${bookingId}`, formattedData);
+      return response.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["myBookings"] });
+    },
+  });
+};
+
+// Delete/Cancel booking mutation hook
+export const useCancelBooking = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["cancelBooking"],
     mutationFn: async (bookingId: string) => {
       const response = await axiosInstance.delete(`/v1/reservations/${bookingId}`);
       return response.data.data;
@@ -72,16 +152,14 @@ export const useDeleteBooking = () => {
   });
 };
 
-// Fetch reservations made on my properties
-const fetchOtherReservations = async (): Promise<Reservation[]> => {
+// Fetch reservations made on current user's properties
+const fetchPropertyReservations = async (): Promise<Reservation[]> => {
   try {
     const response = await axiosInstance.get("/v1/reservations");
     return response.data.data;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.data) {
       const apiError = error.response.data as ApiError;
-      console.log("API Error response:", apiError);
-
       // If it's a 404, return empty array
       if (error.response.status === 404) {
         return [];
@@ -106,79 +184,14 @@ const fetchOtherReservations = async (): Promise<Reservation[]> => {
   }
 };
 
-// Hook to fetch reservations on my properties
-export const useOtherReservations = () => {
+// Hook to fetch reservations on current user's properties
+export const usePropertyReservations = () => {
   return useQuery({
-    queryKey: ["otherReservations"],
-    queryFn: fetchOtherReservations,
+    queryKey: ["propertyReservations"],
+    queryFn: fetchPropertyReservations,
+    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
     retry: (failureCount, error) => {
       if (error instanceof Error && (error.message.includes("Validation failed") || error.message.includes("Unauthorized"))) {
-        return false;
-      }
-      return failureCount < 2;
-    },
-    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
-  });
-};
-
-// Hook to delete any reservation (as property owner)
-export const useDeleteOthersReservation = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (reservationId: string) => {
-      const response = await axiosInstance.delete(`/v1/reservations/${reservationId}`);
-      return response.data.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["otherReservations"] });
-    },
-  });
-};
-
-// Add this interface at the top with other interfaces
-interface UpdateBookingRequest {
-  startDate?: string;
-  endDate?: string;
-  numberOfGuests?: number;
-}
-
-// Add this hook
-export const useUpdateBooking = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ bookingId, data }: { bookingId: string; data: UpdateBookingRequest }) => {
-      const response = await axiosInstance.patch(`/v1/reservations/${bookingId}`, data);
-      return response.data.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["myBookings"] });
-    },
-  });
-};
-
-// Add this function to fetch a single booking
-const fetchBookingById = async (bookingId: string): Promise<Reservation> => {
-  try {
-    const response = await axiosInstance.get(`/v1/reservations/${bookingId}`);
-    return response.data.data;
-  } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.data) {
-      const apiError = error.response.data as ApiError;
-      throw new Error(typeof apiError.message === "string" ? apiError.message : apiError.error || "An error occurred");
-    }
-    throw new Error("Failed to fetch booking details");
-  }
-};
-
-// Add this hook to fetch a single booking
-export const useBookingById = (bookingId: string) => {
-  return useQuery({
-    queryKey: ["booking", bookingId],
-    queryFn: () => fetchBookingById(bookingId),
-    retry: (failureCount, error) => {
-      if (error instanceof Error && error.message.includes("not found")) {
         return false;
       }
       return failureCount < 2;

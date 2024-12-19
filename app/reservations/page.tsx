@@ -6,13 +6,13 @@ import CountryFlagAndName from "@/components/card/CountryFlagAndName";
 import { formatDate, formatCurrency } from "@/utils/format";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Stats from "@/components/reservations/Stats";
-import { useOtherReservations } from "@/utils/reservations";
+import { usePropertyReservations } from "@/utils/reservations";
 import LoadingTable from "@/components/ui/loading-table";
 import { Reservation } from "@/types/reservation";
 import { differenceInDays } from "date-fns";
 
 function ReservationsPage() {
-  const { data: reservations, error, isLoading } = useOtherReservations();
+  const { data: reservations, error, isLoading } = usePropertyReservations();
 
   if (isLoading) {
     return (
