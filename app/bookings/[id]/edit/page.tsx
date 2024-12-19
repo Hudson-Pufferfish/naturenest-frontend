@@ -48,7 +48,7 @@ export default function EditBookingPage({ params }: { params: { id: string } }) 
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8 space-y-6">
+      <div className="container mx-auto px-4 py-8 space-y-6" data-testid="loading-skeleton">
         <Skeleton className="h-8 w-48" />
         <div className="space-y-4">
           <Skeleton className="h-6 w-64" />
